@@ -8,6 +8,16 @@ There are currently 3 working modes:
   
 Additionally, all three modes can be run in reverse, to swap the ordering of the images  
 
+Simple:  
+![alt text](https://github.com/abschmidt6/py-time-slice/blob/master/Slicer-simple-output.jpg "Simple Slice")  
+
+Convex:  
+![alt text](https://github.com/abschmidt6/py-time-slice/blob/master/Slicer-convex-output.jpg "Convex Slice")  
+
+Concave:  
+![alt text](https://github.com/abschmidt6/py-time-slice/blob/master/Slicer-concave-output.jpg "Concave Slice")  
+
+
 ## TODO
 --  Optimize(!!!)
 --  Fix concave/convex factors
