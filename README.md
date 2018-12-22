@@ -19,6 +19,6 @@ Concave:
 
 
 ## TODO
---  Optimize(!!!)
---  Fix concave/convex factors
---  GUI
+--  Optimize(!!!)  
+--  Fix concave/convex factors  
+--  GUI  
