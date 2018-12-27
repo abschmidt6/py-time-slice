@@ -22,3 +22,4 @@ Concave:
 --  Optimize(!!!)  
 --  Fix concave/convex factors  
 --  GUI  
+-- Remove Black Bars  
