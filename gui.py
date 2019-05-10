@@ -7,67 +7,176 @@ import subprocess
 from tkinter import font  as tkfont
 class GUI():
     def __init__(self):
+
+
+        # Tkinter initialize
         self.window = Tk()
+
+        # initialize contant member variables
+        self.initConstMemberVars()
+
+        # Tkinter window setup
         self.window.title("Py-Time-Slice")
         self.window.geometry('800x800')
+        self.window.configure(bg=self.bg_color)
+
+        # Variables to be passed to the Slicer
         self.folder_selected = None
-        self.title_font = tkfont.Font(family='Arial', size=16, weight="bold", slant="italic")
+        self.reverse = StringVar()
+        self.reverse.set("false")
+        self.num_imgs = 0
+        self.num_slices = 0
+        self.mode = StringVar()
+        self.mode.set("linear")
+
+        # Create widgets to build GUI
         self.createWidgets()
 
+    def initConstMemberVars(self):
+        self.title_font = tkfont.Font(family='Arial', size=16, weight="bold", slant="italic")
+        self.subtitle_font = tkfont.Font(family='Arial', size=12, weight="bold")
+        self.bg_color = "white"
+        self.text_color = "#1133bb"
 
     def createWidgets(self):
-        # --- CREATE MAIN CONTAINER TO HOLD ALL OTHERS ---
-        self.main_container = Frame(self.window, background = "white")
-        self.main_container.pack(expand=YES, fill=BOTH)
+        # --- CREATE MAIN frame TO HOLD ALL OTHERS ---
+        self.main_frame = Frame(self.window, bg = self.bg_color)
+        self.main_frame.pack(expand=YES, fill=BOTH)
 
-        # --- CREATE BANNER CONTAINER AND FILL WITH IMAGE ---
-        self.banner_container = Frame(self.main_container, background="white")
+        # --- CREATE BANNER frame AND FILL WITH IMAGE ---
+        self.banner_frame = Frame(self.main_frame, bg=self.bg_color)
         # load banner image
         imgpath = join(dirname(abspath(__file__)), "banner.PNG")
         logo = PhotoImage(file = imgpath)
-        logo_lbl = Label(self.banner_container, image=logo)
+        logo_lbl = Label(self.banner_frame, image=logo)
         # why do I need this line? --> Python and tkinter references and garbage collection
         # [just don't change it]
         logo_lbl.image = logo
         logo_lbl.pack()
-        self.banner_container.pack(expand=NO, fill=X)
+        self.banner_frame.pack(expand=NO, fill=X)
 
-        # --- CREATE PADDING CONTAINER AND LEAVE EMPTY ---
-        self.pad_container = Frame(self.main_container,  background="white", width=600, height=40)
-        self.pad_container.pack()
+        # --- CREATE PADDING frame AND LEAVE EMPTY ---
+        self.pad_frame = Frame(self.main_frame, bg=self.bg_color,
+            width=600,
+            height=40
+        )
+        self.pad_frame.pack()
 
-        # --- CREATE CONTENT CONTAINER FOR DIRECTORY SELECTION AND OPTIONS ---
-        self.content_container = Frame(self.main_container, background="white", width=600)
-        self.content_container.pack(fill=Y)
+        # --- CREATE CONTENT frame FOR DIRECTORY SELECTION AND OPTIONS ---
+        self.content_frame = Frame(self.main_frame, bg=self.bg_color,
+            width=600
+        )
+        self.content_frame.pack(fill=Y)
 
-        # --- CREATE DIRECTORY CONTAINER TO SELECT DIRECTORY---
-        self.dir_container = Frame(self.content_container)
+        # --- CREATE DIRECTORY frame TO SELECT DIRECTORY---
+        self.dir_frame = Frame(self.content_frame, bg=self.bg_color,
+            width=300
+        )
         # Updatable labels
         self.curr_dir_lbl = StringVar()
         self.curr_dir_lbl.set("")
         self.num_imgs_lbl = StringVar()
         self.num_imgs_lbl.set("")
         # Select the directory
-        Label(self.dir_container, text="1. Choose an input folder", font=self.title_font, width = 25).pack()
-        Button(self.dir_container, text="Select Folder", command=self.selectDir).pack()
-        Label(self.dir_container, textvariable=self.curr_dir_lbl).pack()
-        Label(self.dir_container, textvariable=self.num_imgs_lbl).pack()
-        self.dir_container.pack(side=LEFT)
+        Label(self.dir_frame, text="1. Choose an input folder",
+            font=self.title_font,
+            width=25,
+            bg=self.bg_color
+        ).pack(anchor=W)
+        Button(self.dir_frame, text="Select Folder",
+            command=self.selectDir,
+            padx=20
+        ).pack()
+        Label(self.dir_frame, textvariable=self.curr_dir_lbl,
+            bg=self.bg_color
+        ).pack()
+        Label(self.dir_frame, textvariable=self.num_imgs_lbl,
+            bg=self.bg_color
+        ).pack()
+        self.dir_frame.pack(side=LEFT, fill=BOTH, expand=YES)
 
-        # --- CREATE OPTION CONTAINER FOR OPTIONS---
-        self.opt_container = Frame(self.content_container)
-        Label(self.opt_container, text="2. Select Options", font=self.title_font, width=25).pack()
-        self.opt_container.pack(side=LEFT)
+        # --- CREATE OPTION frame FOR OPTIONS---
+        self.opt_frame = Frame(self.content_frame, bg=self.bg_color,
+            width=600
+        )
+        Label(self.opt_frame, text="2. Select Options",
+            font=self.title_font,
+            width=25,
+            bg=self.bg_color
+        ).pack()
+        Label(self.opt_frame, text="Image slicing mode:",
+            bg=self.bg_color,
+            font=self.subtitle_font,
+            fg=self.text_color
+        ).pack(anchor=W)
+        Radiobutton(self.opt_frame, text="Linear",
+            indicatoron=1,
+            value="linear",
+            variable=self.mode,
+            bg=self.bg_color
+        ).pack(anchor=W)
+        Radiobutton(self.opt_frame, text="Convex",
+            indicatoron=1,
+            value="convex",
+            variable=self.mode,
+            bg=self.bg_color
+        ).pack(anchor=W)
+        Radiobutton(self.opt_frame, text="Concave",
+            indicatoron=1,
+            value="concave",
+            variable=self.mode,
+            bg=self.bg_color
+        ).pack(anchor=W)
 
-        # --- CREATE RUN CONTAINER TO RUN PROGFRAM ---
-        self.run_container = Frame(self.main_container)
-        Label(self.run_container, text="3. Run", width=50, font=self.title_font).pack()
-        self.run_container.pack()
+        Label(self.opt_frame, text="Image ordering mode:",
+            bg=self.bg_color,
+            font=self.subtitle_font,
+            fg=self.text_color
+        ).pack(anchor=W)
+        Radiobutton(self.opt_frame, text="Normal",
+            indicatoron=1,
+            value="false",
+            variable=self.reverse,
+            bg=self.bg_color
+        ).pack(anchor=W)
+        Radiobutton(self.opt_frame, text="Reverse",
+            indicatoron=1,
+            value="true",
+            variable=self.reverse,
+            bg=self.bg_color
+        ).pack(anchor=W)
 
-        # --- CREATE FOOTER CONTAINER FOR CREDITS---
-        self.footer_container = Frame(self.main_container, background="white", width=600, height=100)
-        Label(self.footer_container, text="Created by Andrew Schmidt").pack()
-        self.footer_container.pack(side=BOTTOM)
+        Label(self.opt_frame, text="Number of slices:",
+            bg=self.bg_color,
+            font=self.subtitle_font,
+            fg=self.text_color
+        ).pack(anchor=W)
+
+        Label(self.opt_frame, text="Choose how many images to use",
+            bg=self.bg_color,
+        ).pack(anchor=W)
+        self.num_slices_entry = Entry(self.opt_frame).pack(anchor=W)
+        Label(self.opt_frame, text="If no number is entered, all images will be used",
+            bg=self.bg_color,
+        ).pack(anchor=W)
+
+
+
+        self.opt_frame.pack(side=LEFT, fill=BOTH, expand=YES)
+
+        # --- CREATE RUN frame TO RUN PROGFRAM ---
+        self.run_frame = Frame(self.main_frame)
+        Label(self.run_frame, text="3. Run",
+            width=50,
+            font=self.title_font,
+            bg=self.bg_color
+        ).pack()
+        self.run_frame.pack()
+
+        # --- CREATE FOOTER frame FOR CREDITS---
+        self.footer_frame = Frame(self.main_frame, bg=self.bg_color, width=600, height=100)
+        Label(self.footer_frame, text="Created by Andrew Schmidt").pack()
+        self.footer_frame.pack(side=BOTTOM)
 
     def selectDir(self):
         self.folder_selected = filedialog.askdirectory()
@@ -77,6 +186,8 @@ class GUI():
         img_names = [ elem for elem in output if (".jpg" in elem.lower() and "slicer" not in elem.lower())]
         self.num_imgs_lbl.set("{} eligible images in this folder".format((str(len(img_names)))))
 
+    def runSlicer(self):
+        self.num_slices = int(self.num_slices_entry.get())
     def mainloop(self):
         self.window.mainloop()
 
