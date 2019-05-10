@@ -43,6 +43,15 @@ class GUI():
         self.main_frame = Frame(self.window, bg = self.bg_color)
         self.main_frame.pack(expand=YES, fill=BOTH)
 
+        self.createBannerFrame()
+        self.createPaddingFrame()
+        self.createContentFrame()
+        self.createDirFrame()
+        self.createOptFrame()
+        self.createRunFrame()
+        self.createFooterFrame()
+
+    def createBannerFrame(self):
         # --- CREATE BANNER frame AND FILL WITH IMAGE ---
         self.banner_frame = Frame(self.main_frame, bg=self.bg_color)
         # load banner image
@@ -55,6 +64,7 @@ class GUI():
         logo_lbl.pack()
         self.banner_frame.pack(expand=NO, fill=X)
 
+    def createPaddingFrame(self):
         # --- CREATE PADDING frame AND LEAVE EMPTY ---
         self.pad_frame = Frame(self.main_frame, bg=self.bg_color,
             width=600,
@@ -62,12 +72,14 @@ class GUI():
         )
         self.pad_frame.pack()
 
+    def createContentFrame(self):
         # --- CREATE CONTENT frame FOR DIRECTORY SELECTION AND OPTIONS ---
         self.content_frame = Frame(self.main_frame, bg=self.bg_color,
             width=600
         )
         self.content_frame.pack(fill=Y)
 
+    def createDirFrame(self):
         # --- CREATE DIRECTORY frame TO SELECT DIRECTORY---
         self.dir_frame = Frame(self.content_frame, bg=self.bg_color,
             width=300
@@ -95,6 +107,7 @@ class GUI():
         ).pack()
         self.dir_frame.pack(side=LEFT, fill=BOTH, expand=YES)
 
+    def createOptFrame(self):
         # --- CREATE OPTION frame FOR OPTIONS---
         self.opt_frame = Frame(self.content_frame, bg=self.bg_color,
             width=600
@@ -104,6 +117,8 @@ class GUI():
             width=25,
             bg=self.bg_color
         ).pack()
+
+        # Options for image slicing mode
         Label(self.opt_frame, text="Image slicing mode:",
             bg=self.bg_color,
             font=self.subtitle_font,
@@ -128,6 +143,7 @@ class GUI():
             bg=self.bg_color
         ).pack(anchor=W)
 
+        # Options for image ordering mode
         Label(self.opt_frame, text="Image ordering mode:",
             bg=self.bg_color,
             font=self.subtitle_font,
@@ -146,12 +162,12 @@ class GUI():
             bg=self.bg_color
         ).pack(anchor=W)
 
+        # Options for number of slices
         Label(self.opt_frame, text="Number of slices:",
             bg=self.bg_color,
             font=self.subtitle_font,
             fg=self.text_color
         ).pack(anchor=W)
-
         Label(self.opt_frame, text="Choose how many images to use",
             bg=self.bg_color,
         ).pack(anchor=W)
@@ -160,10 +176,11 @@ class GUI():
             bg=self.bg_color,
         ).pack(anchor=W)
 
-
-
+        # Pack frame
         self.opt_frame.pack(side=LEFT, fill=BOTH, expand=YES)
 
+
+    def createRunFrame(self):
         # --- CREATE RUN frame TO RUN PROGFRAM ---
         self.run_frame = Frame(self.main_frame)
         Label(self.run_frame, text="3. Run",
@@ -173,6 +190,7 @@ class GUI():
         ).pack()
         self.run_frame.pack()
 
+    def createFooterFrame(self):
         # --- CREATE FOOTER frame FOR CREDITS---
         self.footer_frame = Frame(self.main_frame, bg=self.bg_color, width=600, height=100)
         Label(self.footer_frame, text="Created by Andrew Schmidt").pack()
@@ -188,6 +206,7 @@ class GUI():
 
     def runSlicer(self):
         self.num_slices = int(self.num_slices_entry.get())
+
     def mainloop(self):
         self.window.mainloop()
 
