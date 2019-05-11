@@ -1,4 +1,5 @@
 import subprocess
+from os import listdir, path
 from PIL import Image
 class ImageProperties:
     def __init__(self, path, ext):
@@ -10,7 +11,7 @@ class ImageProperties:
 
 class Slicer:
 
-    def __init__(self, dir_name, img_ext, mode, reverse = False, curve_depth = 1, num_slices = 0):
+    def __init__(self, in_dir, out_dir, img_ext, mode, reverse = False, curve_depth = 1, num_slices = 0):
         self.slice_mode = mode      # simple, concave, convex
         self.num_imgs = 0
         self.num_slices = num_slices
@@ -18,15 +19,16 @@ class Slicer:
         self.img_names = []         # list of image filenames
         self.col_width = 0          # Column width for simple mode
         self.curve_depth = curve_depth  # Curve depth for concave/convex modes
-        self.props = ImageProperties(dir_name, img_ext)
+        self.out_dir = out_dir
+        self.props = ImageProperties(in_dir, img_ext)
 
     def getImageNames(self):
         # get all files within the dir_name directory
-        output = subprocess.check_output(["dir", self.props.path])
+        output = listdir(self.props.path)
 
         # Append all filenames to a list
         # if they contain the img extension and don't contain "slicer"
-        self.img_names = [ elem for elem in output.decode().split() if (self.props.extension in elem.lower() and "slicer" not in elem.lower())]
+        self.img_names = [ elem for elem in output if (self.props.extension in elem.lower() and "slicer" not in elem.lower())]
         self.img_names.sort()
         self.num_imgs = len(self.img_names)
 
@@ -61,7 +63,7 @@ class Slicer:
         if self.reverse:
             self.img_names.sort(reverse = True)
 
-        if self.slice_mode == "simple":
+        if self.slice_mode == "linear":
             self.simpleSlice()
         elif self.slice_mode == "convex":
             self.warpedSlice(self.getConvexFactors())
@@ -73,20 +75,24 @@ class Slicer:
             exit()
 
     def getImageModeAndSize(self):
-        img  = Image.open(self.props.path + self.img_names[0])
+        img  = Image.open(path.join(self.props.path, self.img_names[0]))
         self.props.mode = img.mode
         self.props.size = img.size
 
     def simpleSlice(self):
-        col_width =  int(self.props.size[0] / self.num_imgs)
+        col_width =  [int(self.props.size[0] / self.num_imgs)] * self.num_imgs
+        for i in range(int((self.props.size[0] % self.num_imgs) / 2)):
+            col_width[i] += 1
+            col_width[len(col_width) - 1 - i] += 1
 
-        final_img = Image.new(self.props.mode, self.props.size)
+        self.final_img = Image.new(self.props.mode, self.props.size)
         l_col_boundary = 0
-        r_col_boundary = col_width
+        r_col_boundary = col_width[0]
+        counter = 0
         for img_name in self.img_names:
             # Make sure image can open
             try:
-                img  = Image.open(self.props.path + img_name)
+                img  = Image.open(path.join(self.props.path, img_name))
                 print("Processing: " + str(img_name))
             except IOError:
                 print("ERROR::   Image: " + img_name + " could not be opened")
@@ -95,12 +101,12 @@ class Slicer:
 
             for i in range(l_col_boundary, r_col_boundary):
                 for j in range(self.props.size[1]):
-                    final_img.putpixel((i,j), img.getpixel((i,j)))
+                    self.final_img.putpixel((i,j), img.getpixel((i,j)))
 
             l_col_boundary = r_col_boundary
-            r_col_boundary = min(r_col_boundary + col_width, self.props.size[0])
+            r_col_boundary = min(r_col_boundary + col_width[counter], self.props.size[0])
 
-        final_img.save(self.props.path + "Slicer-simple-output" + self.props.extension)
+        self.saveImage()
 
     def warpedSlice(self, factors=[]):
         if len(factors) == 0:
@@ -108,7 +114,7 @@ class Slicer:
             print("Good Bye")
             exit()
 
-        final_img = Image.new(self.props.mode, self.props.size)
+        self.final_img = Image.new(self.props.mode, self.props.size)
         l_col_boundary = 0
         r_col_boundary = int(factors[0] * self.props.size[0])
         factor_counter = 0
@@ -116,7 +122,7 @@ class Slicer:
             # Make sure image can open
             factor_counter += 1
             try:
-                img  = Image.open(self.props.path + img_name)
+                img  = Image.open(path.join(self.props.path, img_name))
                 print("Processing: " + str(img_name))
             except IOError:
                 print("ERROR::   Image: " + img_name + " could not be opened")
@@ -125,7 +131,7 @@ class Slicer:
 
             for i in range(l_col_boundary, r_col_boundary):
                 for j in range(self.props.size[1]):
-                    final_img.putpixel((i,j), img.getpixel((i,j)))
+                    self.final_img.putpixel((i,j), img.getpixel((i,j)))
 
             l_col_boundary = r_col_boundary
             if factor_counter >= len(factors):
@@ -133,12 +139,7 @@ class Slicer:
             else:
                 r_col_boundary = int(min(r_col_boundary + (factors[factor_counter] * self.props.size[0]), self.props.size[0]))
 
-        if self.mode == "convex":
-            final_img.save(self.props.path + "Slicer-convex-output" + self.props.extension)
-        elif self.mode == "concave":
-            final_img.save(self.props.path + "Slicer-concave-output" + self.props.extension)
-        else:
-            final_img.save(self.props.path + "Slicer-curved-output" + self.props.extension)
+        self.saveImage()
 
 
     def getConvexFactors(self):
@@ -191,3 +192,15 @@ class Slicer:
         factors = [x / factor_sum for x in factors]
 
         return factors
+
+    def saveImage(self):
+        files = listdir(self.out_dir)
+        filename = "slicer-{}-output".format(self.slice_mode)
+
+        counter = 1
+        while filename + self.props.extension in files:
+            filename = "slicer-" + self.slice_mode + "-output" + str(counter)
+            counter += 1
+
+        fullname = path.join(self.out_dir, filename + self.props.extension)
+        self.final_img.save(fullname)

@@ -22,12 +22,14 @@ class GUI():
 
         # Variables to be passed to the Slicer
         self.folder_selected = None
-        self.reverse = StringVar()
-        self.reverse.set("false")
+        self.reverse = BooleanVar()
+        self.reverse.set(False)
         self.num_imgs = 0
         self.num_slices = 0
         self.mode = StringVar()
         self.mode.set("linear")
+        self.img_ext = ".jpg"
+        self.curve_depth = 1
 
         # Create widgets to build GUI
         self.createWidgets()
@@ -37,6 +39,7 @@ class GUI():
         self.subtitle_font = tkfont.Font(family='Arial', size=12, weight="bold")
         self.bg_color = "white"
         self.text_color = "#1133bb"
+        self.default_out_dir_lbl = "Ouput folder defaults to same as input folder"
 
     def createWidgets(self):
         # --- CREATE MAIN frame TO HOLD ALL OTHERS ---
@@ -89,20 +92,33 @@ class GUI():
         self.curr_dir_lbl.set("")
         self.num_imgs_lbl = StringVar()
         self.num_imgs_lbl.set("")
+        self.out_dir_lbl = StringVar()
+        self.out_dir_lbl.set(self.default_out_dir_lbl)
+
         # Select the directory
-        Label(self.dir_frame, text="1. Choose an input folder",
+        Label(self.dir_frame, text="1. Choose folders",
             font=self.title_font,
             width=25,
             bg=self.bg_color
         ).pack(anchor=W)
-        Button(self.dir_frame, text="Select Folder",
+        Button(self.dir_frame, text="Select Input Folder",
             command=self.selectDir,
-            padx=20
+            padx=20,
+            pady=5
         ).pack()
         Label(self.dir_frame, textvariable=self.curr_dir_lbl,
-            bg=self.bg_color
+            bg=self.bg_color,
         ).pack()
         Label(self.dir_frame, textvariable=self.num_imgs_lbl,
+            bg=self.bg_color,
+        ).pack()
+        Label(self.dir_frame, text="", bg=self.bg_color, pady=10).pack()
+        Button(self.dir_frame, text="Select Output Folder",
+            command=self.selectOutDir,
+            padx=20,
+            pady=5
+        ).pack()
+        Label(self.dir_frame, textvariable=self.out_dir_lbl,
             bg=self.bg_color
         ).pack()
         self.dir_frame.pack(side=LEFT, fill=BOTH, expand=YES)
@@ -151,13 +167,13 @@ class GUI():
         ).pack(anchor=W)
         Radiobutton(self.opt_frame, text="Normal",
             indicatoron=1,
-            value="false",
+            value=False,
             variable=self.reverse,
             bg=self.bg_color
         ).pack(anchor=W)
         Radiobutton(self.opt_frame, text="Reverse",
             indicatoron=1,
-            value="true",
+            value=True,
             variable=self.reverse,
             bg=self.bg_color
         ).pack(anchor=W)
@@ -171,7 +187,8 @@ class GUI():
         Label(self.opt_frame, text="Choose how many images to use",
             bg=self.bg_color,
         ).pack(anchor=W)
-        self.num_slices_entry = Entry(self.opt_frame).pack(anchor=W)
+        self.num_slices_entry = Entry(self.opt_frame)
+        self.num_slices_entry.pack(anchor=W)
         Label(self.opt_frame, text="If no number is entered, all images will be used",
             bg=self.bg_color,
         ).pack(anchor=W)
@@ -188,6 +205,11 @@ class GUI():
             font=self.title_font,
             bg=self.bg_color
         ).pack()
+        Button(self.run_frame, text="Run Py-Time-Slice",
+            command=self.runSlicer,
+            padx=20,
+            pady=5
+        ).pack(fill=X)
         self.run_frame.pack()
 
     def createFooterFrame(self):
@@ -204,8 +226,37 @@ class GUI():
         img_names = [ elem for elem in output if (".jpg" in elem.lower() and "slicer" not in elem.lower())]
         self.num_imgs_lbl.set("{} eligible images in this folder".format((str(len(img_names)))))
 
+        if self.out_dir_lbl.get() == self.default_out_dir_lbl:
+            self.out_dir_lbl.set("{}".format((self.folder_selected)))
+
+    def selectOutDir(self):
+        self.out_folder_selected = filedialog.askdirectory()
+        self.out_dir_lbl.set("{}".format((self.out_folder_selected)))
+
     def runSlicer(self):
-        self.num_slices = int(self.num_slices_entry.get())
+        # # DEBUG:
+        self.printSlicerVars()
+
+        slicer = Slicer(
+            in_dir = self.curr_dir_lbl.get(),
+            out_dir = self.out_dir_lbl.get(),
+            img_ext = self.img_ext,
+            mode = self.mode.get(),
+            reverse = self.reverse.get(),
+            curve_depth = self.curve_depth,
+            num_slices = int(self.num_slices_entry.get())
+        )
+        slicer.slice()
+
+    def printSlicerVars(self):
+        print("in_dir:\t{}".format((self.curr_dir_lbl.get())))
+        print("out_dir\t{}".format((self.out_dir_lbl.get())))
+        print("img_ext\t{}".format((self.img_ext)))
+        print("mode\t{}".format((self.mode.get())))
+        print("reverse\t{}".format((self.reverse.get())))
+        print("curve_depth\t{}".format((self.curve_depth)))
+        print("num_slices\t{}".format((self.num_slices_entry.get())))
+
 
     def mainloop(self):
         self.window.mainloop()
