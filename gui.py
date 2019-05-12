@@ -36,7 +36,7 @@ class GUI():
 
 
         self.main_frame.bind("<Configure>", self.onFrameConfigure)
-        # self.main_frame.pack(expand=YES, fill=BOTH)
+        self.main_frame.bind_all("<MouseWheel>", self.on_mousewheel)
 
         # Variables to be passed to the Slicer
         self.folder_selected = None
@@ -60,7 +60,6 @@ class GUI():
         self.default_out_dir_lbl = "Ouput folder defaults to same as input folder"
 
     def createWidgets(self):
-
 
         self.createBannerFrame()
         self.createPaddingFrame()
@@ -276,6 +275,9 @@ class GUI():
     def onFrameConfigure(self, event):
         '''Reset the scroll region to encompass the inner frame'''
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+
+    def on_mousewheel(self, event):
+        self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
 
     def mainloop(self):
         self.root.mainloop()
