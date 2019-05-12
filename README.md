@@ -27,3 +27,4 @@ Concave:
 --  Add multiple threads
 --  Add scrollbar
 --  Add loading bar
+--  Reduce number of member variables where possible
