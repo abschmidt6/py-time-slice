@@ -22,6 +22,9 @@ class Slicer:
         self.out_dir = out_dir
         self.props = ImageProperties(in_dir, img_ext)
 
+        self.curr_slice = None
+        self.slice_iter = 0
+
     def getImageNames(self):
         # get all files within the dir_name directory
         output = listdir(self.props.path)
@@ -99,6 +102,9 @@ class Slicer:
                 print("Good Bye")
                 exit()
 
+            self.curr_slice = img_name
+            self.slice_iter += 1
+
             for i in range(l_col_boundary, r_col_boundary):
                 for j in range(self.props.size[1]):
                     self.final_img.putpixel((i,j), img.getpixel((i,j)))
@@ -128,6 +134,9 @@ class Slicer:
                 print("ERROR::   Image: " + img_name + " could not be opened")
                 print("Good Bye")
                 exit()
+
+            self.curr_slice = img_name
+            self.slice_iter += 1
 
             for i in range(l_col_boundary, r_col_boundary):
                 for j in range(self.props.size[1]):
@@ -204,3 +213,6 @@ class Slicer:
 
         fullname = path.join(self.out_dir, filename + self.props.extension)
         self.final_img.save(fullname)
+
+    def getThreadUpdateInfo(self):
+        return (self.curr_slice, self.slice_iter)

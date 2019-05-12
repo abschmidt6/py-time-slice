@@ -1,10 +1,13 @@
 from tkinter import filedialog
 from tkinter import *
+from tkinter import ttk
 from slicer import Slicer
 from os.path import dirname, abspath, join
 from os import listdir
 import subprocess
 from tkinter import font  as tkfont
+import threading
+import time
 class GUI():
     def __init__(self):
 
@@ -17,7 +20,7 @@ class GUI():
 
         # Tkinter window setup
         self.root.title("Py-Time-Slice")
-        self.root.geometry('800x800')
+        self.root.geometry('685x850')
         self.root.configure(bg=self.bg_color)
 
         self.canvas = Canvas(self.root, borderwidth=0, bg=self.bg_color)
@@ -30,13 +33,17 @@ class GUI():
 
         self.vsb.pack(side="right", fill="y")
         self.hsb.pack(side="bottom", fill="x")
-        self.canvas.pack(side="left", fill="both", expand=True)
-        self.canvas.create_window((4,4), window=self.main_frame, anchor="nw",
-                                  tags="self.main_frame")
-
 
         self.main_frame.bind("<Configure>", self.onFrameConfigure)
         self.main_frame.bind_all("<MouseWheel>", self.on_mousewheel)
+
+        self.canvas.create_window((0,0), window=self.main_frame,
+                                    anchor = "nw",
+                                    tags="self.main_frame")
+
+        self.canvas.pack(side="top", fill="both", expand=True)
+
+
 
         # Variables to be passed to the Slicer
         self.folder_selected = None
@@ -225,6 +232,18 @@ class GUI():
             padx=20,
             pady=5
         ).pack(fill=X)
+
+        self.curr_img_lbl = StringVar()
+        self.curr_img_lbl.set("")
+
+        Label(self.run_frame, textvariable=self.curr_img_lbl,
+            bg=self.bg_color,
+        ).pack(fill=X)
+
+        self.progress = ttk.Progressbar(self.run_frame, orient="horizontal",
+                                        mode="determinate")
+        self.progress.pack(fill=X)
+
         self.run_frame.pack()
 
     def createFooterFrame(self):
@@ -240,6 +259,7 @@ class GUI():
         output = listdir(self.folder_selected)
         img_names = [ elem for elem in output if (".jpg" in elem.lower() and "slicer" not in elem.lower())]
         self.num_imgs_lbl.set("{} eligible images in this folder".format((str(len(img_names)))))
+        self.num_imgs = len(img_names)
 
         if self.out_dir_lbl.get() == self.default_out_dir_lbl:
             self.out_dir_lbl.set("{}".format((self.folder_selected)))
@@ -249,8 +269,14 @@ class GUI():
         self.out_dir_lbl.set("{}".format((self.out_folder_selected)))
 
     def runSlicer(self):
-        # # DEBUG:
+        # DEBUG:
         self.printSlicerVars()
+
+        num_iters = self.num_slices_entry.get()
+        if not num_iters:
+            num_iters = self.num_imgs
+        else:
+            num_iters = int(num_iters)
 
         slicer = Slicer(
             in_dir = self.curr_dir_lbl.get(),
@@ -259,9 +285,28 @@ class GUI():
             mode = self.mode.get(),
             reverse = self.reverse.get(),
             curve_depth = self.curve_depth,
-            num_slices = int(self.num_slices_entry.get())
+            num_slices = num_iters
         )
-        slicer.slice()
+        self.progress["value"] = 0
+        self.progress["maximum"] = num_iters
+
+        slice_thread = threading.Thread(target=slicer.slice)
+        slice_thread.start()
+
+        prog_thread = threading.Thread(target=self.watchProgress, args=(slicer, num_iters))
+        prog_thread.start()
+
+    def watchProgress(self, slicer, num_iters):
+        while True:
+            info = slicer.getThreadUpdateInfo()
+            self.curr_img_lbl.set("Processing: " + str(info[0]))
+            self.progress["value"] = info[1]
+
+
+            if info[1] == num_iters:
+                break
+
+            time.sleep(.1)
 
     def printSlicerVars(self):
         print("in_dir:\t{}".format((self.curr_dir_lbl.get())))
@@ -271,6 +316,7 @@ class GUI():
         print("reverse\t{}".format((self.reverse.get())))
         print("curve_depth\t{}".format((self.curve_depth)))
         print("num_slices\t{}".format((self.num_slices_entry.get())))
+        print("num_imgs\t{}".format((self.num_imgs)))
 
     def onFrameConfigure(self, event):
         '''Reset the scroll region to encompass the inner frame'''

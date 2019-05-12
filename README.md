@@ -24,6 +24,5 @@ Concave:
 --  Remove Black Bars from concave and convex modes
 
 ## GUI TODO
---  Add multiple threads
---  Add loading bar
+--  Fix threads (they should end when GUI is closed)
 --  Reduce number of member variables where possible
