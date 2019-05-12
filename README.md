@@ -22,3 +22,8 @@ Concave:
 --  Optimize(!!!)  
 --  Fix concave/convex factors  
 --  Remove Black Bars from concave and convex modes
+
+## GUI TODO
+--  Add multiple threads
+--  Add scrollbar
+--  Add loading bar
