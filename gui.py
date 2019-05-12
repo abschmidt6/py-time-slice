@@ -10,15 +10,33 @@ class GUI():
 
 
         # Tkinter initialize
-        self.window = Tk()
+        self.root = Tk()
 
         # initialize contant member variables
         self.initConstMemberVars()
 
         # Tkinter window setup
-        self.window.title("Py-Time-Slice")
-        self.window.geometry('800x800')
-        self.window.configure(bg=self.bg_color)
+        self.root.title("Py-Time-Slice")
+        self.root.geometry('800x800')
+        self.root.configure(bg=self.bg_color)
+
+        self.canvas = Canvas(self.root, borderwidth=0, bg=self.bg_color)
+        self.main_frame = Frame(self.root, bg=self.bg_color)
+        self.vsb = Scrollbar(self.root, orient="vertical", command=self.canvas.yview)
+        self.hsb = Scrollbar(self.root, orient="horizontal", command=self.canvas.xview)
+
+        self.canvas.configure(yscrollcommand=self.vsb.set)
+        self.canvas.configure(xscrollcommand=self.hsb.set)
+
+        self.vsb.pack(side="right", fill="y")
+        self.hsb.pack(side="bottom", fill="x")
+        self.canvas.pack(side="left", fill="both", expand=True)
+        self.canvas.create_window((4,4), window=self.main_frame, anchor="nw",
+                                  tags="self.main_frame")
+
+
+        self.main_frame.bind("<Configure>", self.onFrameConfigure)
+        # self.main_frame.pack(expand=YES, fill=BOTH)
 
         # Variables to be passed to the Slicer
         self.folder_selected = None
@@ -42,9 +60,7 @@ class GUI():
         self.default_out_dir_lbl = "Ouput folder defaults to same as input folder"
 
     def createWidgets(self):
-        # --- CREATE MAIN frame TO HOLD ALL OTHERS ---
-        self.main_frame = Frame(self.window, bg = self.bg_color)
-        self.main_frame.pack(expand=YES, fill=BOTH)
+
 
         self.createBannerFrame()
         self.createPaddingFrame()
@@ -257,9 +273,12 @@ class GUI():
         print("curve_depth\t{}".format((self.curve_depth)))
         print("num_slices\t{}".format((self.num_slices_entry.get())))
 
+    def onFrameConfigure(self, event):
+        '''Reset the scroll region to encompass the inner frame'''
+        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
 
     def mainloop(self):
-        self.window.mainloop()
+        self.root.mainloop()
 
 app = GUI()
 app.mainloop()
