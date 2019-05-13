@@ -1,13 +1,13 @@
-from tkinter import filedialog, messagebox
+import time
+import threading
 from tkinter import *
 from tkinter import ttk
-from slicer import Slicer
+from tkinter import font as tkfont
 from os.path import dirname, abspath, join
 from os import listdir
 import subprocess
-from tkinter import font  as tkfont
-import threading
-import time
+from slicer import Slicer
+
 class GUI():
     def __init__(self):
         """ Initialize GUI. """
@@ -80,6 +80,7 @@ class GUI():
         self.slicer_running = False
 
     def initGUIVars(self):
+        """ Initialize variables to be used by the GUI. """
         # Updatable labels
         self.curr_dir_lbl = StringVar()
         self.curr_dir_lbl.set("")
@@ -140,7 +141,6 @@ class GUI():
         self.dir_frame = Frame(self.content_frame, bg=self.bg_color,
             width=300
         )
-
 
         # Select the directory
         Label(self.dir_frame, text="1. Choose folders",
@@ -262,9 +262,6 @@ class GUI():
             padx=20,
             pady=5
         ).pack(fill=X)
-
-
-
         Label(self.run_frame, textvariable=self.curr_img_lbl,
             bg=self.bg_color,
         ).pack(fill=X)
@@ -272,9 +269,7 @@ class GUI():
         self.progress = ttk.Progressbar(self.run_frame, orient="horizontal",
                                         mode="determinate")
         self.progress.pack(fill=X)
-
         self.run_frame.pack()
-
 
     def createFooterFrame(self):
         """ Create footer frame for credits.
