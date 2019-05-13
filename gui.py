@@ -1,12 +1,13 @@
 import time
 import threading
 from tkinter import *
-from tkinter import ttk
+from tkinter import ttk, filedialog, messagebox
 from tkinter import font as tkfont
 from os.path import dirname, abspath, join
 from os import listdir
 import subprocess
 from slicer import Slicer
+from myexceptions import *
 
 class GUI():
     def __init__(self):
@@ -332,19 +333,22 @@ class GUI():
         slice_thread.daemon = True
         slice_thread.start()
 
+        self.slicer_running = True
+
         prog_thread = threading.Thread(target=self.watchProgress, args=(slicer, num_iters))
         prog_thread.daemon = True
         prog_thread.start()
 
-        self.slicer_running = True
 
     def watchProgress(self, slicer, num_iters):
         """ Update progress bar reflecting the progress of the Slicer.
 
             This function runs in it's own thread and updates the progress bar
-            with info from the slicer """
+            with info from the slicer.
 
-        while True:
+            It also checks for exceptions set by the Slicer. """
+
+        while self.slicer_running:
             info = slicer.getThreadUpdateInfo()
             self.curr_img_lbl.set("Processing: " + str(info[0]))
             self.progress["value"] = info[1]
@@ -352,10 +356,35 @@ class GUI():
 
             if info[1] == num_iters:
                 self.slicer_running = False
-                break
+
+            if type(slicer.curr_exception) != type(NoError()):
+                self.slicer_running = False
+                self.handleException(slicer.curr_exception)
 
             time.sleep(.1)
 
+    def handleException(self, exception):
+
+        if type(exception) == type(TooFewImagesError()):
+            error_str = "Image names could not be selected from {}\n".format((self.props.path))
+            error_str += "Number of images selected = {}\n".format((self.num_imgs))
+            error_str += "Expected 3+ images, found fewer\n"
+            error_str += "Please try again"
+
+        elif type(exception) == type(TooManySlicesError()):
+            error_str = "Too many slices\n"
+            error_str += "Number of slices must be < Number of images\n"
+            error_str += "Please try again"
+
+        elif type(exception) == type(ImageError("")):
+            error_str = "Image: " + exception.img + " could not be opened\n"
+            error_str += "Remove this image from the directory and try again"
+
+        elif type(exception) == type(InternalError("")):
+            error_str = "An internal error occured\n"
+            error_str += exception.txt
+
+        messagebox.showerror("Error", error_str)
 
     def printSlicerVars(self):
         """ Debug function that prints all varaibles paassed to the slicer """

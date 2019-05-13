@@ -1,6 +1,7 @@
 import subprocess
 from os import listdir, path
 from PIL import Image
+from myexceptions import *
 class ImageProperties:
     def __init__(self, path, ext):
         """ Initialize Image Properties """
@@ -27,6 +28,8 @@ class Slicer:
         self.curr_slice = None
         self.slice_iter = 0
 
+        self.curr_exception = NoError("Nothing is wrong")
+
     def getImageNames(self):
         """ Get Image names from the provided input directory """
         # get all files within the dir_name directory
@@ -39,15 +42,12 @@ class Slicer:
         self.num_imgs = len(self.img_names)
 
         if self.num_imgs < 3:
-            print("ERROR::   Image names could not be selected from {}".format((self.props.path)))
-            print("Number of images selected = {}".format((self.num_imgs)))
-            print("Expected 3+ images, found fewer ... exiting")
+            self.curr_exception = TooFewImagesError()
             exit()
 
         # Prune (temp)
         if self.num_slices > self.num_imgs:
-            print("ERROR::   Too many slices")
-            print("Number of slices must be < Number of images ... exiting")
+            self.curr_exception = TooManySlicesError()
             exit()
 
         elif self.num_slices < self.num_imgs:
@@ -77,8 +77,7 @@ class Slicer:
         elif self.slice_mode == "concave":
             self.warpedSlice(self.getConcaveFactors())
         else:
-            print("ERROR::    Invalid Mode")
-            print("Good Bye")
+            self.curr_exception = InternalError("Invalid mode")
             exit()
 
     def getImageModeAndSize(self):
@@ -102,10 +101,8 @@ class Slicer:
             # Make sure image can open
             try:
                 img  = Image.open(path.join(self.props.path, img_name))
-                print("Processing: " + str(img_name))
             except IOError:
-                print("ERROR::   Image: " + img_name + " could not be opened")
-                print("Good Bye")
+                self.curr_exception = ImageError(img_name)
                 exit()
 
             self.curr_slice = img_name
@@ -123,8 +120,7 @@ class Slicer:
     def warpedSlice(self, factors=[]):
         """ Complex slice, where each slice has a different width """
         if len(factors) == 0:
-            print("ERROR::    Factors could not be obtained")
-            print("Good Bye")
+            self.curr_exception = InternalError("Factors could not be obtained")
             exit()
 
         self.final_img = Image.new(self.props.mode, self.props.size)
@@ -136,10 +132,8 @@ class Slicer:
             factor_counter += 1
             try:
                 img  = Image.open(path.join(self.props.path, img_name))
-                print("Processing: " + str(img_name))
             except IOError:
-                print("ERROR::   Image: " + img_name + " could not be opened")
-                print("Good Bye")
+                self.curr_exception = ImageError(img_name)
                 exit()
 
             self.curr_slice = img_name
@@ -161,8 +155,7 @@ class Slicer:
     def getConvexFactors(self):
         """ Return a list of factors used for a complex (Convex) slice """
         if self.num_imgs < 3:
-            print("ERROR:    Number of input images must be greater than 2")
-            print("Good Bye")
+            self.curr_exception = TooFewImagesError()
             exit()
         if self.num_imgs % 2 == 0:
             factors = [self.curve_depth, self.curve_depth]
@@ -188,8 +181,7 @@ class Slicer:
     def getConcaveFactors(self):
         """ Return a list of factors used for a complex (Concave) slice """
         if self.num_imgs < 3:
-            print("ERROR:    Number of input images must be greater than 2")
-            print("Good Bye")
+            self.curr_exception = TooFewImagesError()
             exit()
         if self.num_imgs % 2 == 0:
             factors = [1, 1]
