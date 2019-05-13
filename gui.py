@@ -291,9 +291,11 @@ class GUI():
         self.progress["maximum"] = num_iters
 
         slice_thread = threading.Thread(target=slicer.slice)
+        slice_thread.daemon = True
         slice_thread.start()
 
         prog_thread = threading.Thread(target=self.watchProgress, args=(slicer, num_iters))
+        prog_thread.daemon = True
         prog_thread.start()
 
     def watchProgress(self, slicer, num_iters):
@@ -324,6 +326,10 @@ class GUI():
 
     def on_mousewheel(self, event):
         self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+
+    def onClosing(self):
+        if messagebox.askokcancel("Quit", "Do you want to quit?"):
+            self.root.destroy()
 
     def mainloop(self):
         self.root.mainloop()
