@@ -3,6 +3,7 @@ from os import listdir, path
 from PIL import Image
 class ImageProperties:
     def __init__(self, path, ext):
+        """ Initialize Image Properties """
         self.path = path
         self.extension = ext
         self.mode = ""
@@ -12,6 +13,7 @@ class ImageProperties:
 class Slicer:
 
     def __init__(self, in_dir, out_dir, img_ext, mode, reverse = False, curve_depth = 1, num_slices = 0):
+        """ Initialize Slicer. """
         self.slice_mode = mode      # simple, concave, convex
         self.num_imgs = 0
         self.num_slices = num_slices
@@ -26,6 +28,7 @@ class Slicer:
         self.slice_iter = 0
 
     def getImageNames(self):
+        """ Get Image names from the provided input directory """
         # get all files within the dir_name directory
         output = listdir(self.props.path)
 
@@ -50,8 +53,8 @@ class Slicer:
         elif self.num_slices < self.num_imgs:
             self.pruneImages()
 
-
     def pruneImages(self):
+        """ Reduce the image names list down to the number of slices """
         tmp_list = self.img_names
         self.img_names = list()
         factor = self.num_imgs / self.num_slices
@@ -60,6 +63,7 @@ class Slicer:
         self.num_imgs = len(self.img_names)
 
     def slice(self):
+        """ Perform the slice; create one images from many """
         self.getImageNames()
         self.getImageModeAndSize()
 
@@ -78,11 +82,13 @@ class Slicer:
             exit()
 
     def getImageModeAndSize(self):
+        """ Get the image properties given a list of image names """
         img  = Image.open(path.join(self.props.path, self.img_names[0]))
         self.props.mode = img.mode
         self.props.size = img.size
 
     def simpleSlice(self):
+        """ Simplest slicing method, each slice has equal weight"""
         col_width =  [int(self.props.size[0] / self.num_imgs)] * self.num_imgs
         for i in range(int((self.props.size[0] % self.num_imgs) / 2)):
             col_width[i] += 1
@@ -115,6 +121,7 @@ class Slicer:
         self.saveImage()
 
     def warpedSlice(self, factors=[]):
+        """ Complex slice, where each slice has a different width """
         if len(factors) == 0:
             print("ERROR::    Factors could not be obtained")
             print("Good Bye")
@@ -152,6 +159,7 @@ class Slicer:
 
 
     def getConvexFactors(self):
+        """ Return a list of factors used for a complex (Convex) slice """
         if self.num_imgs < 3:
             print("ERROR:    Number of input images must be greater than 2")
             print("Good Bye")
@@ -178,6 +186,7 @@ class Slicer:
 
 
     def getConcaveFactors(self):
+        """ Return a list of factors used for a complex (Concave) slice """
         if self.num_imgs < 3:
             print("ERROR:    Number of input images must be greater than 2")
             print("Good Bye")
@@ -203,6 +212,7 @@ class Slicer:
         return factors
 
     def saveImage(self):
+        """ Saves the final img to the output directory """
         files = listdir(self.out_dir)
         filename = "slicer-{}-output".format(self.slice_mode)
 
@@ -215,4 +225,5 @@ class Slicer:
         self.final_img.save(fullname)
 
     def getThreadUpdateInfo(self):
+        """ Return progress of the slicer, for use with the GUI """
         return (self.curr_slice, self.slice_iter)

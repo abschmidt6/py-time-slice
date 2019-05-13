@@ -22,4 +22,5 @@ Concave:
 --  Optimize(!!!)  
 --  Fix concave/convex factors  
 --  Remove Black Bars from concave and convex modes
+--  Add exceptions to Slicer and exception handling to GUI
 
