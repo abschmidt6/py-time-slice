@@ -23,5 +23,3 @@ Concave:
 --  Fix concave/convex factors  
 --  Remove Black Bars from concave and convex modes
 
-## GUI TODO
---  Reduce number of member variables where possible
