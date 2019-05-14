@@ -22,5 +22,5 @@ Concave:
 --  Optimize(!!!)  
 --  Fix concave/convex factors  
 --  Remove Black Bars from concave and convex modes
---  Add more exceptions to slicer when using listdir or opening files
+--  Add support for other filetypes (png, RAW, tiff)
 

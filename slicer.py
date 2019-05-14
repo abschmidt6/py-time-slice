@@ -33,7 +33,11 @@ class Slicer:
     def getImageNames(self):
         """ Get Image names from the provided input directory """
         # get all files within the dir_name directory
-        output = listdir(self.props.path)
+        try:
+            output = listdir(self.props.path)
+        except OSError:
+            self.curr_exception = InternalError("OSError when listing files in:\n{}".format((self.props.path)))
+            exit()
 
         # Append all filenames to a list
         # if they contain the img extension and don't contain "slicer"
@@ -82,7 +86,12 @@ class Slicer:
 
     def getImageModeAndSize(self):
         """ Get the image properties given a list of image names """
-        img  = Image.open(path.join(self.props.path, self.img_names[0]))
+        try:
+            img  = Image.open(path.join(self.props.path, self.img_names[0]))
+        except IOError:
+            self.curr_exception = ImageError(self.img_names[0])
+            exit()
+
         self.props.mode = img.mode
         self.props.size = img.size
 

@@ -77,7 +77,7 @@ class GUI():
         self.mode = StringVar()
         self.mode.set("linear")
         self.img_ext = ".jpg"
-        self.curve_depth = 1
+        self.curve_depth = 5
         self.slicer_running = False
 
     def initGUIVars(self):
@@ -289,11 +289,22 @@ class GUI():
         self.folder_selected = filedialog.askdirectory()
         self.curr_dir_lbl.set("{}".format((self.folder_selected)))
 
-        output = listdir(self.folder_selected)
+        try:
+            output = listdir(self.folder_selected)
+        except OSError:
+            self.num_imgs_lbl.set("0 eligible images in this folder")
+            error_str = "There was an error selecting images from the directory:\n"
+            error_str += self.folder_selected + "\n"
+            error_str += "Please try again"
+            messagebox.showerror("Error", error_str)
+            return
+
         img_names = [ elem for elem in output if (".jpg" in elem.lower() and "slicer" not in elem.lower())]
         self.num_imgs_lbl.set("{} eligible images in this folder".format((str(len(img_names)))))
         self.num_imgs = len(img_names)
 
+        # Set the deafult state of the out directory equal to the in directory
+        # iff the current out dir is blank (if it = it's default value)
         if self.out_dir_lbl.get() == self.default_out_dir_lbl:
             self.out_dir_lbl.set("{}".format((self.folder_selected)))
 
@@ -356,6 +367,7 @@ class GUI():
 
             if info[1] == num_iters:
                 self.slicer_running = False
+                self.curr_img_lbl.set("DONE!")
 
             if type(slicer.curr_exception) != type(NoError()):
                 self.slicer_running = False
