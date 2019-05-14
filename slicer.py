@@ -117,9 +117,10 @@ class Slicer:
             self.curr_slice = img_name
             self.slice_iter += 1
 
-            for i in range(l_col_boundary, r_col_boundary):
-                for j in range(self.props.size[1]):
-                    self.final_img.putpixel((i,j), img.getpixel((i,j)))
+            box = (l_col_boundary, 0, r_col_boundary, self.props.size[1])
+            slice = img.crop(box)
+
+            self.final_img.paste(slice, box)
 
             l_col_boundary = r_col_boundary
             r_col_boundary = min(r_col_boundary + col_width[counter], self.props.size[0])
@@ -148,9 +149,10 @@ class Slicer:
             self.curr_slice = img_name
             self.slice_iter += 1
 
-            for i in range(l_col_boundary, r_col_boundary):
-                for j in range(self.props.size[1]):
-                    self.final_img.putpixel((i,j), img.getpixel((i,j)))
+            box = (l_col_boundary, 0, r_col_boundary, self.props.size[1])
+            slice = img.crop(box)
+
+            self.final_img.paste(slice, box)
 
             l_col_boundary = r_col_boundary
             if factor_counter >= len(factors):

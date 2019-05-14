@@ -23,4 +23,5 @@ Concave:
 --  Fix concave/convex factors  
 --  Remove Black Bars from concave and convex modes
 --  Add support for other filetypes (png, RAW, tiff)
+--  Add error checking if the number of slices is < the number of images but somehow > the number of pixels in the width dimension
 
