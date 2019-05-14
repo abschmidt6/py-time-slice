@@ -18,8 +18,7 @@ Concave:
 ![alt text](https://github.com/abschmidt6/py-time-slice/blob/master/Slicer-concave-output.jpg "Concave Slice")  
 
 
-## TODO
---  Optimize(!!!)  
+## TODO  
 --  Fix concave/convex factors  
 --  Remove Black Bars from concave and convex modes
 --  Add support for other filetypes (png, RAW, tiff)
