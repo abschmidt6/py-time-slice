@@ -57,6 +57,8 @@ class Slicer:
         elif self.num_slices < self.num_imgs:
             self.pruneImages()
 
+
+
     def pruneImages(self):
         """ Reduce the image names list down to the number of slices """
         tmp_list = self.img_names
@@ -70,6 +72,9 @@ class Slicer:
         """ Perform the slice; create one images from many """
         self.getImageNames()
         self.getImageModeAndSize()
+
+        if self.num_slices > self.props.size[0]:
+            self.num_slices = self.props.size[0]
 
         if self.reverse:
             self.img_names.sort(reverse = True)
@@ -155,7 +160,7 @@ class Slicer:
             self.final_img.paste(slice, box)
 
             l_col_boundary = r_col_boundary
-            if factor_counter >= len(factors):
+            if factor_counter >= len(factors) - 1:
                 r_col_boundary = self.props.size[0]
             else:
                 r_col_boundary = int(min(r_col_boundary + (factors[factor_counter] * self.props.size[0]), self.props.size[0]))
